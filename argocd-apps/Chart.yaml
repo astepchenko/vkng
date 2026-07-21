@@ -1,0 +1,4 @@
+apiVersion: v2
+name: argocd-apps
+description: App-of-Apps child Application manifests, parameterized by the root Application's Helm values.
+version: 0.1.0

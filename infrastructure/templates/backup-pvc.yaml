@@ -1,0 +1,19 @@
+{{- if .Values.backup.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-backups
+  labels:
+    app.kubernetes.io/name: mysql-backups
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: vkng
+spec:
+  accessModes:
+    - {{ .Values.backup.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.backup.persistence.size }}
+  {{- with .Values.backup.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end }}

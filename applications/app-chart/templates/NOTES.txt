@@ -1,0 +1,12 @@
+app-chart deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+{{- if .Values.frontend.enabled }}
+
+Frontend service: {{ include "app-chart.frontend.fullname" . }} ({{ .Values.frontend.service.type }}:{{ .Values.frontend.service.port }})
+Reach it locally:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "app-chart.frontend.fullname" . }} 8080:{{ .Values.frontend.service.port }}
+  open http://localhost:8080
+{{- end }}
+{{- if .Values.ingress.enabled }}
+Ingress host: http://{{ .Values.ingress.host }}
+{{- end }}

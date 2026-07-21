@@ -1,0 +1,14 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app-chart.frontend.fullname" . }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+    {{- include "app-chart.selectorLabels" (dict "root" . "component" "frontend") | nindent 4 }}
+data:
+  {{/* nginx's resolver directive does not honor /etc/resolv.conf search domains,
+       so the fallback must be a fully qualified in-cluster DNS name. */}}
+  BACKEND_HOST: {{ .Values.frontend.backend.host | default (printf "%s.%s.svc.cluster.local" (include "app-chart.backend.fullname" .) .Release.Namespace) | quote }}
+  BACKEND_PORT: {{ .Values.frontend.backend.port | quote }}
+{{- end }}

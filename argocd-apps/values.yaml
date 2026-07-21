@@ -1,0 +1,4 @@
+repoUrl: https://github.com/astepchenko/vkng.git
+targetRevision: main
+dbNamespace: database
+appNamespace: apps

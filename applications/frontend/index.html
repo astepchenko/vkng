@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>vkng · GitOps demo</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display: grid; place-items: center; min-height: 100vh; margin: 0;
+      background: #0f172a; color: #e2e8f0;
+    }
+    .card {
+      background: #1e293b; padding: 2.5rem 3rem; border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.4); text-align: center; max-width: 420px;
+    }
+    h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+    p.sub { margin: 0 0 1.5rem; color: #94a3b8; font-size: .9rem; }
+    .count { font-size: 3.5rem; font-weight: 700; color: #38bdf8; line-height: 1; }
+    button {
+      margin-top: 1.5rem; padding: .75rem 1.5rem; font-size: 1rem; cursor: pointer;
+      border: none; border-radius: 10px; background: #38bdf8; color: #0f172a; font-weight: 600;
+    }
+    button:hover { background: #0ea5e9; }
+    .meta { margin-top: 1rem; font-size: .75rem; color: #64748b; min-height: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>vkng</h1>
+    <p class="sub">frontend → backend → MySQL</p>
+    <div class="count" id="count">—</div>
+    <button id="btn">Register visit</button>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <script>
+    const countEl = document.getElementById("count");
+    const metaEl = document.getElementById("meta");
+    const btn = document.getElementById("btn");
+
+    async function loadCount() {
+      try {
+        const res = await fetch("/api/visits/count");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        countEl.textContent = data.count;
+        metaEl.textContent = "served by " + (data.servedBy || "backend");
+      } catch (e) {
+        metaEl.textContent = "error: " + e.message;
+      }
+    }
+
+    async function visit() {
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/visits", { method: "POST" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        countEl.textContent = data.count;
+        metaEl.textContent = "served by " + (data.servedBy || "backend");
+      } catch (e) {
+        metaEl.textContent = "error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener("click", visit);
+    loadCount();
+  </script>
+</body>
+</html>

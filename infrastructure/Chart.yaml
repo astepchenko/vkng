@@ -1,0 +1,10 @@
+apiVersion: v2
+name: infrastructure
+description: Stateful infrastructure - Bitnami MySQL plus a scheduled mysqldump backup CronJob.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: mysql
+    version: 14.0.3
+    repository: oci://registry-1.docker.io/bitnamicharts

@@ -1,0 +1,14 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app-chart.backend.fullname" . }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+    {{- include "app-chart.selectorLabels" (dict "root" . "component" "backend") | nindent 4 }}
+data:
+  DB_HOST: {{ .Values.backend.db.host | quote }}
+  DB_PORT: {{ .Values.backend.db.port | quote }}
+  DB_NAME: {{ .Values.backend.db.name | quote }}
+  DB_USER: {{ .Values.backend.db.user | quote }}
+{{- end }}

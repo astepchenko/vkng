@@ -1,0 +1,65 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  labels:
+    app.kubernetes.io/name: mysql-backup
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: vkng
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: mysql-backup
+            app.kubernetes.io/component: backup
+            app.kubernetes.io/part-of: vkng
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: mysqldump
+              image: {{ .Values.backup.image | quote }}
+              imagePullPolicy: {{ .Values.backup.imagePullPolicy }}
+              env:
+                # Password is read from the Secret; MYSQL_PWD keeps it off the
+                # process argument list.
+                - name: MYSQL_PWD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.backup.credentialsSecret }}
+                      key: {{ .Values.backup.rootPasswordKey }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  TS="$(date +%Y%m%d-%H%M%S)"
+                  OUT="/backups/{{ .Values.backup.database }}-${TS}.sql"
+                  echo "Dumping {{ .Values.backup.database }} to ${OUT}"
+                  mysqldump \
+                    --host={{ .Values.backup.mysqlHost }} \
+                    --port={{ .Values.backup.mysqlPort }} \
+                    --user=root \
+                    --single-transaction --routines --triggers \
+                    --databases {{ .Values.backup.database }} > "${OUT}"
+                  echo "Backup complete:"
+                  ls -lh /backups
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: mysql-backups
+{{- end }}

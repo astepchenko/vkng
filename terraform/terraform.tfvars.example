@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and adjust for your setup (that file is
+# git-ignored). See variables.tf for the full list of variables, defaults,
+# and descriptions.
+
+kube_context    = "k3d-vkng"
+repo_url        = "https://github.com/astepchenko/vkng.git" # change to your fork
+target_revision = "main"
+argocd_hostname = "argocd.localhost"

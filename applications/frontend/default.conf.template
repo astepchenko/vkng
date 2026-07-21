@@ -1,0 +1,30 @@
+# Rendered at container start by the nginx entrypoint (envsubst).
+# ${BACKEND_HOST}/${BACKEND_PORT} come from the Deployment env; and
+# ${NGINX_LOCAL_RESOLVERS} is provided by the nginx image entrypoint
+# (derived from /etc/resolv.conf).
+#
+# The upstream is passed through a variable together with a `resolver`
+# directive so nginx resolves the backend at request time, not at startup.
+# This avoids a hard crash if the backend Service/DNS is not ready yet.
+server {
+    listen 80;
+    server_name _;
+
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        set $backend_upstream "${BACKEND_HOST}:${BACKEND_PORT}";
+        proxy_pass http://$backend_upstream$request_uri;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

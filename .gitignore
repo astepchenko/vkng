@@ -1,0 +1,24 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.auto.tfvars
+*.auto.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Go build artifacts
+applications/backend/backend
+applications/backend/bin/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

@@ -1,0 +1,64 @@
+# Values for the infrastructure chart.
+#
+# The MySQL password is NOT stored here. Terraform generates a random
+# password and creates the "mysql-credentials" Secret; the Bitnami chart
+# consumes it through auth.existingSecret, and the backup CronJob reads
+# the same Secret via secretKeyRef.
+
+# Bitnami MySQL (subchart)
+mysql:
+  # The default Bitnami images were moved off the free Docker Hub tier, so we
+  # pin the equivalent image from the "bitnamilegacy" repository. This requires
+  # bypassing the chart's image-verification guard.
+  global:
+    security:
+      allowInsecureImages: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/mysql
+    tag: 9.4.0-debian-12-r1
+
+  fullnameOverride: mysql
+  architecture: standalone
+
+  auth:
+    database: appdb
+    username: appuser
+    # Passwords come from this Secret (created by Terraform); keys expected:
+    # mysql-root-password, mysql-password.
+    existingSecret: mysql-credentials
+
+  primary:
+    persistence:
+      enabled: true
+      size: 2Gi
+
+  # Schema (the "visits" table) is created idempotently by the backend on
+  # startup, so no initdb scripts are needed here.
+
+  # Optional Bitnami components disabled to avoid extra (legacy) images.
+  metrics:
+    enabled: false
+  volumePermissions:
+    enabled: false
+
+# Backup CronJob (this chart's own templates)
+backup:
+  enabled: true
+  schedule: "*/5 * * * *"
+  image: mysql:9.4
+  imagePullPolicy: IfNotPresent
+  # MySQL connection target (service created by the subchart).
+  mysqlHost: mysql
+  mysqlPort: 3306
+  database: appdb
+  # Secret holding the MySQL root password.
+  credentialsSecret: mysql-credentials
+  rootPasswordKey: mysql-root-password
+  # Dedicated PersistentVolumeClaim for backup files.
+  persistence:
+    size: 1Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3

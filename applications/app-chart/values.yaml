@@ -1,0 +1,69 @@
+# Default values for app-chart.
+# Both applications are configured independently under their own keys.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Backend: Go API that talks to MySQL.
+backend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: vkng/backend
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  containerPort: 8080
+  service:
+    type: ClusterIP
+    port: 80
+  # Non-sensitive DB connection settings (rendered into a ConfigMap).
+  db:
+    host: mysql.database.svc.cluster.local
+    port: "3306"
+    name: appdb
+    user: appuser
+    # Password is read from a Kubernetes Secret (created by Terraform),
+    # never stored in Git.
+    passwordSecret:
+      name: mysql-credentials
+      key: mysql-password
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+# Frontend: nginx serving a static page and proxying /api to the backend.
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: vkng/frontend
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  containerPort: 80
+  service:
+    type: ClusterIP
+    port: 80
+  # Backend target for the nginx reverse proxy.
+  # host defaults to the in-release backend service when left empty.
+  backend:
+    host: ""
+    port: 80
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+# Ingress exposing the frontend (Traefik ships with k3s), so it is reachable
+# without kubectl port-forward.
+ingress:
+  enabled: true
+  className: traefik
+  host: vkng.localhost
+  annotations: {}
